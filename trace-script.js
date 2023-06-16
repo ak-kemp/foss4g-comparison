@@ -25,8 +25,8 @@ const fs = require('fs');
     await page.setCacheEnabled(false);
     await page.setViewport({ width: 1920, height: 1080 });
   
-    await page.tracing.start({ screenshots: true, path: `./openlayers/vector-tiles/results/vector-vector/openlayers-trace-${i}.json` });
-    await page.goto('http://127.0.0.1:5501/openlayers/vector-tiles/vector-style-vector.html', {waitUntil: ['networkidle0'], timeout: 60000 });
+    await page.tracing.start({ screenshots: true, path: `./openlayers/raster-tiles/results/raster-raster/openlayers-trace-${i}.json` });
+    await page.goto('http://127.0.0.1:5501/openlayers/raster-tiles/vector-tile-raster.html', {waitUntil: ['networkidle0'], timeout: 60000 });
     // const metrics = await page.evaluate(()=> JSON.stringify(window.performance));
     // console.log(JSON.parse(metrics))
     // const pageMetrics = await page.metrics();
@@ -34,7 +34,7 @@ const fs = require('fs');
     await page.tracing.stop();
   
     // Extract data from the trace
-    const tracing = JSON.parse(fs.readFileSync(`./openlayers/vector-tiles/results/vector-vector/openlayers-trace-${i}.json` , 'utf8'));
+    const tracing = JSON.parse(fs.readFileSync(`./openlayers/vector-tiles/results/raster-raster/openlayers-trace-${i}.json` , 'utf8'));
   
     const traceScreenshots = tracing.traceEvents.filter(x => (
         x.cat === 'disabled-by-default-devtools.screenshot' &&
