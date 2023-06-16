@@ -1,6 +1,6 @@
 const lat = 34.027;
 const lng = -118.805;
-const zoom = 15;
+const zoom = 16;
 
 const locations = [
     // { lat: 34.0012, lng: -118.8064, zoom:16, title: "location1" },

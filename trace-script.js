@@ -22,8 +22,8 @@ const fs = require('fs');
     await page.setCacheEnabled(false);
     await page.setViewport({ width: 1920, height: 1080 });
   
-    await page.tracing.start({ screenshots: true, path: './leaflet/vector-tiles/results/vector-vector/leaflet-trace-5.json' });
-    await page.goto('http://127.0.0.1:5501/leaflet/vector-tiles/vector-style-vector.html', {waitUntil: ['networkidle2'], timeout: 60000 });
+    await page.tracing.start({ screenshots: true, path: './leaflet/vector-tiles/results/raster-vector/leaflet-trace-4.json' });
+    await page.goto('http://127.0.0.1:5501/leaflet/vector-tiles/raster-style-vector.html', {waitUntil: ['networkidle2'], timeout: 60000 });
     // const metrics = await page.evaluate(()=> JSON.stringify(window.performance));
     // console.log(JSON.parse(metrics))
     // const pageMetrics = await page.metrics();
@@ -31,7 +31,7 @@ const fs = require('fs');
     await page.tracing.stop();
   
     // Extract data from the trace
-    const tracing = JSON.parse(fs.readFileSync('./leaflet/vector-tiles/results/vector-vector/leaflet-trace-5.json' , 'utf8'));
+    const tracing = JSON.parse(fs.readFileSync('./leaflet/vector-tiles/results/raster-vector/leaflet-trace-4.json' , 'utf8'));
   
     const traceScreenshots = tracing.traceEvents.filter(x => (
         x.cat === 'disabled-by-default-devtools.screenshot' &&
