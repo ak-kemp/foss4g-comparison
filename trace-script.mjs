@@ -1,5 +1,5 @@
 import puppeteer from 'puppeteer';
-//import lighthouse from 'lighthouse';
+import lighthouse from 'lighthouse';
 import fs from 'fs';
 
 const OUTPUT_FOLDER = './output/';
@@ -41,9 +41,9 @@ const csvHeaders = [
   'lastCommitEnd',
   'totalPaintTime',
   'totalAppLoadTime',
-  //'totalBlockingTime',
-  //'firstContentfulPaint',
-  //'largestContentfulPaint'
+  'firstContentfulPaint',
+  'largestContentfulPaint',
+  'totalBlockingTime'
 ]
 
 /*
@@ -82,7 +82,6 @@ const performTest = async (library, test, options) => {
   // TODO initialize csv
   let csvStream;
   if (saveCSV) {
-    console.log(csvHeaders.join(',')+'\n','');
     fs.writeFileSync(outputFolder+'data.csv','');
     csvStream = fs.createWriteStream(outputFolder+'data.csv')
     csvStream.write(csvHeaders.join(',')+'\n');
@@ -97,6 +96,7 @@ const performTest = async (library, test, options) => {
         csvStream,
         saveScreenshots
       })
+      console.log(`Test ${thisFile} in ${thisLibrary} complete.`)
     }
   }
 }
@@ -108,31 +108,30 @@ const testPage = async (library,test,options) => {
 
   for (let i=0; i < options.iterations; i++) {
     await (async () => {
+      console.log(`Starting test ${i}...`);
       // Configure settings
-      const browser =  await puppeteer.launch()
+      const browser =  await puppeteer.launch({headless:'new'});
       const page = await browser.newPage()
       await page.setCacheEnabled(false);
       await page.setViewport({ width: 1920, height: 1080 });   
-      // Trace app load
+      // Generate puppeteer trace
       console.log(`Starting trace ${i}...`);
       await page.tracing.start({ screenshots: true, path: `${options.outputFolder}trace-${i}.json` });
       await page.goto(appAddress, {waitUntil: ['networkidle0'], timeout: 60000 });
-      // const metrics = await page.evaluate(()=> JSON.stringify(window.performance));
-      // console.log(JSON.parse(metrics))
-      // const pageMetrics = await page.metrics();
-      // console.log(pageMetrics);
       await page.tracing.stop();
       await page.close();
-      // lighthouse report
-      /*
-      const lighthousePage = await browser.newPage();
-      const {lhr} = await lighthouse(appAddress, undefined, undefined, lighthousePage);
 
-      console.log(lhr.categories.performance);
-      */
-      //console.log(`Lighthouse scores: ${Object.values(lhr.categories).map(c => c.score).join(', ')}`);
+      // Generate lighthouse report
+      const lighthousePage = await browser.newPage();
+      console.log(`Starting lighthouse report ${i}...`);
+      const lighthoueResults = await lighthouse(appAddress,{
+        onlyCategories:['performance'],
+      },undefined,lighthousePage);
+      fs.writeFileSync(`${options.outputFolder}lhr-${i}.json`,JSON.stringify(lighthoueResults.lhr));
+
       await browser.close();
 
+      // Parse data
       console.log(`Parsing trace ${i}...`);
       // Open the trace
       const trace = JSON.parse(fs.readFileSync(`${options.outputFolder}trace-${i}.json` , 'utf8'));
@@ -146,30 +145,30 @@ const testPage = async (library,test,options) => {
         traceEntry.push(test);
         traceEntry.push(i);
 
-        // library requested and received
+        // Get libraries requested and received
         const packages = libraries[library];
         const packageRequestTimes = [];
         const packageLoadedTimes = [];
         Object.keys(libraries[library]).forEach(libPackage => {
           const packageSent = trace.traceEvents.filter(e=>(e.name === "ResourceSendRequest" && e.args.data.url === packages[libPackage]));
           if (packageSent.length == 0) return;
-          console.log(packages[libPackage]);
           packageRequestTimes.push(packageSent[0].ts);
           const packageLoaded = trace.traceEvents.filter(e=>(e.name === "ResourceFinish" && e.args.data.requestId === packageSent[0].args.data.requestId));
           packageLoadedTimes.push(packageLoaded[0].ts);
         })
 
-        // record time of first request sent
-        // record time of final package loaded
+        // Timestamps of when the first package is requested and when the final package is loaded -- in microseconds
         const firstPackageRequest = Math.min(...packageRequestTimes);
         traceEntry.push(firstPackageRequest);
         const finalPackageLoad = Math.max(...packageLoadedTimes);
         traceEntry.push(finalPackageLoad);
+
+        // Total library load time -- in milliseconds
         const totalLibraryLoadTime = finalPackageLoad - firstPackageRequest;
-        traceEntry.push(totalLibraryLoadTime);
+        traceEntry.push(toMs(totalLibraryLoadTime));
 
         
-        // first and final commit ends
+        // Get first and final commit ends
         const commitEnds = trace.traceEvents.filter(e => (e.name === "Commit" && e.ph === "e"));    
         let firstCommitEnd = commitEnds[0];
         let finalCommitEnd = commitEnds[0];
@@ -179,21 +178,29 @@ const testPage = async (library,test,options) => {
           if (commit.ts > finalCommitEnd.ts) finalCommitEnd = commit;
         }
       
-        //console.log(firstCommitEnd.ts,finalCommitEnd.ts);
+        // Timestamps of first and last commit end -- in microseconds
         traceEntry.push(firstCommitEnd.ts)
         traceEntry.push(finalCommitEnd.ts);
 
-        // total paint time
+        // Total paint time -- in milliseconds
         const totalPaintTime = finalCommitEnd.ts - firstCommitEnd.ts;
-        traceEntry.push(totalPaintTime);
+        traceEntry.push(toMs(totalPaintTime));
 
-
-        // TODO first visible data
-
-        // Total load time for app content: from library request sent to app finished rendering
+        // Total load time from first request sent to final commit rendered -- in milliseconds
         const totalAppLoadTime = finalCommitEnd.ts - firstPackageRequest;
-        traceEntry.push(totalAppLoadTime);
-        // TODO total blocking time (lighthouse report)
+        traceEntry.push(toMs(totalAppLoadTime));
+
+        // First contentful paint -- in milliseconds
+        const firstPaint = lighthoueResults.lhr.audits['first-contentful-paint'];
+        traceEntry.push(firstPaint.numericValue);
+
+        // Largest contentful paint -- in milliseconds
+        const largestPaint = lighthoueResults.lhr.audits['largest-contentful-paint']
+        traceEntry.push(largestPaint.numericValue);
+
+        // Total blocking time -- in milliseconds
+        const tbt = lighthoueResults.lhr.audits['total-blocking-time'];
+        traceEntry.push(tbt.numericValue);
 
         // write to csv file
         options.csvStream.write(traceEntry.join(',')+'\n');
@@ -210,24 +217,26 @@ const testPage = async (library,test,options) => {
         ));
     
         traceScreenshots.forEach(function(snap, index) {
-          console.log('saving screenshots...')
+          console.log('Saving screenshots...')
           fs.writeFile(`${options.outputFolder}trace-${i}--screenshot-${index}.png`, snap.args.snapshot, 'base64', function(err) {
             if (err) {
               console.log('writeFile error', err);
             }
           });
         });
-        console.log('screenshots parsed, finishing attempt',i);
+        console.log('Screenshots saved.',i);
       }
-      await browser.close();
+
+      console.log(`Test ${i} complete.`)
+
     })();
     }
 
 }
 
 // Appends the relevant information from a trace to the CSV
-const toCSV = (trace) => {
-  
+const toMs = (microsecond) => {
+    return microsecond / 1000;
 }
 
 
