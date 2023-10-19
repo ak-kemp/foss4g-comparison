@@ -20,12 +20,13 @@
 </head>
 <body>
   <div id="map"></div>
-    <script>
-      const map = L.map("map", {
-        minZoom: 2
-      }).setView([0, 0], 0);
+    <script type="module">
+      import {geoJson as location} from "../locations.js";
+
+      const map = L.map("map").setView([location.lat, location.lng], location.zoom);
 
       let url = 'https://services3.arcgis.com/GVgbJbqm8hXASVYi/arcgis/rest/services/WALS_word_order/FeatureServer/0/query?f=pgeojson&where=1=1';
+
       const response = fetch(url)
       .then(response => response.json())
       .then(response => {

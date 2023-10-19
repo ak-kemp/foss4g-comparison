@@ -20,14 +20,14 @@
   </head>
   <body>
     <div id="map"></div>
-    <script>
-      
+    <script type="module">
+      import {geoJson as location} from "../locations.js";
       const map = new ol.Map({ target: "map" });
 
       map.setView(
         new ol.View({
-          center: ol.proj.fromLonLat([0,0]), // Starting location [longitude, latitude]
-          zoom: 1
+          center: ol.proj.fromLonLat([location.lng,location.lat]), // Starting location [longitude, latitude]
+          zoom: location.zoom
         })
       );
 

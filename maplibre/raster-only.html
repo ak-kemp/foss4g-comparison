@@ -5,7 +5,6 @@
     <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no" />
     <script src="https://unpkg.com/maplibre-gl@3.0.1/dist/maplibre-gl.js"></script>
     <link href="https://unpkg.com/maplibre-gl@3.0.1/dist/maplibre-gl.css" rel="stylesheet" />
-    <script src="./pan-locations.js"></script>
     <style>
       html,
       body,
@@ -23,26 +22,25 @@
   <body>
     <div id="map"></div>
     <script type="module">
-      
-      import {apiKey} from "../../auth.js";
+      import {rasterOnly as location} from '../locations.js';
 
       const map = new maplibregl.Map({
         container: "map", // the id of the div element,
-        zoom: 12, // starting zoom
-        center: [lng,lat] // starting location [longitude, latitude]
+        zoom: location.zoom, // starting zoom
+        center: [location.lng,location.lat] // starting location [longitude, latitude]
       });
 
-          map.addSource("parcels", {
-          type: "raster",
-          tiles: [
-            "https://services3.arcgis.com/GVgbJbqm8hXASVYi/arcgis/rest/services/Santa_Monica_Mountains_Parcels/MapServer/tile/{z}/{y}/{x}"
-          ]
-        });
-        map.addLayer({
-          id: "parcels-raster",
-              type: "raster",
-              source: "parcels",
-        });
+      map.addSource("parcels", {
+        type: "raster",
+        tiles: [
+          "https://services3.arcgis.com/GVgbJbqm8hXASVYi/arcgis/rest/services/Santa_Monica_Mountains_Parcels/MapServer/tile/{z}/{y}/{x}"
+        ]
+      });
+      map.addLayer({
+        id: "parcels-raster",
+            type: "raster",
+            source: "parcels",
+      });
     </script>
   </body>
 </html>

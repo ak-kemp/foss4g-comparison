@@ -23,32 +23,24 @@
   <body>
     <div id="map"></div>
     <script type="module">
-      
-      import {apiKey} from "../../auth.js";
+      import {geoJson as location} from "../locations.js";
 
       const map = new maplibregl.Map({
         container: "map", // the id of the div element,
-        zoom: 1, // starting zoom
-        center: [0,0] // starting location [longitude, latitude]
+        zoom: location.zoom-1, // starting zoom
+        center: [location.lng,location.lat] // starting location [longitude, latitude]
       });
 
-        map.addSource("features", {
-          type: "geojson",
-          data: "https://services3.arcgis.com/GVgbJbqm8hXASVYi/arcgis/rest/services/WALS_word_order/FeatureServer/0/query?f=pgeojson&where=1=1"
-        });
+      map.addSource("features", {
+        type: "geojson",
+        data: "https://services3.arcgis.com/GVgbJbqm8hXASVYi/arcgis/rest/services/WALS_word_order/FeatureServer/0/query?f=pgeojson&where=1=1"
+      });
 
-       map.addLayer({
-          id: "features-circle",
-          type: "circle",
-          source: "features",
-
-          paint: {
-            "circle-color": "hsla(0,0%,0%,0.75)",
-            "circle-stroke-width": 1.5,
-            "circle-stroke-color": "white",
-
-          }
-    });
+      map.addLayer({
+        id: "features-circle",
+        type: "circle",
+        source: "features"
+      });
     </script>
   </body>
 </html>

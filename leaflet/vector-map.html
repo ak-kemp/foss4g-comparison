@@ -26,9 +26,10 @@
   <body>
     <div id="map"></div>
     <script type="module">
-      import {apiKey} from "../../auth.js";
+      import {basemap as location} from "../locations.js";
+      import {apiKey} from "../auth.js";
 
-      const map = L.map("map").setView([25,-25],3);
+      const map = L.map("map").setView([location.lat,location.lng],location.zoom);
 
       const basemap = L.esri.Vector.vectorBasemapLayer('ArcGIS:LightGray', {
         apiKey

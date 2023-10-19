@@ -17,25 +17,24 @@
     </style>
     <script src="https://cdn.jsdelivr.net/npm/ol@v7.4.0/dist/ol.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v7.4.0/ol.css">
-    <script src="./pan-locations.js"></script>
   </head>
   <body>
     <div id="map"></div>
-    <script>
-      
+    <script type="module">
+      import {rasterOnly as location} from '../locations.js';
       const map = new ol.Map({ target: "map" });
 
       map.setView(
         new ol.View({
-          center: ol.proj.fromLonLat([lng,lat]), // Starting location [longitude, latitude]
-          zoom: zoom
+          center: ol.proj.fromLonLat([location.lng,location.lat]), // Starting location [longitude, latitude]
+          zoom: location.zoom+1
         })
       );
 
-      const parclesURL = "https://services3.arcgis.com/GVgbJbqm8hXASVYi/arcgis/rest/services/Santa_Monica_Mountains_Parcels/MapServer/tile/{z}/{y}/{x}";
+      const parcelsURL = "https://services3.arcgis.com/GVgbJbqm8hXASVYi/arcgis/rest/services/Santa_Monica_Mountains_Parcels/MapServer/tile/{z}/{y}/{x}";
 
       const parclesSource = new ol.source.XYZ({
-        url: parclesURL
+        url: parcelsURL
       });
 
       const tileLayer = new ol.layer.Tile({

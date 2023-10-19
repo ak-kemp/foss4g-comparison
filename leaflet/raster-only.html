@@ -1,13 +1,11 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>Display a tile layer</title>
     <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
     <!-- Load Esri Leaflet from CDN -->
     <script src="https://unpkg.com/esri-leaflet@3.0.10/dist/esri-leaflet.js"></script>
-    <script src="./pan-locations.js"></script>
     <style>
       html,
       body,
@@ -24,16 +22,15 @@
   </head>
   <body>
     <div id="map"></div>
-    <script>
-        const map = L.map("map", {
-        minZoom: 2
-      }).setView([lat, lng], zoom);   
+    <script type="module">
+      import {rasterOnly as location} from '../locations.js';
 
-    const tileLayer =  L.esri
-        .tiledMapLayer({
-          url: `https://services3.arcgis.com/GVgbJbqm8hXASVYi/arcgis/rest/services/Santa_Monica_Mountains_Parcels/MapServer`,
-        })
-      
+      const map = L.map("map").setView([location.lat, location.lng], location.zoom+1);   
+
+      const tileLayer =  L.esri.tiledMapLayer({
+        url: `https://services3.arcgis.com/GVgbJbqm8hXASVYi/arcgis/rest/services/Santa_Monica_Mountains_Parcels/MapServer`,
+      })
+        
       tileLayer.addTo(map);
     </script>
   </body>
