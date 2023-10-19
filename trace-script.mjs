@@ -236,7 +236,7 @@ const testPage = async (library,test,options) => {
 
 // Appends the relevant information from a trace to the CSV
 const toMs = (microsecond) => {
-    return microsecond / 1000;
+    return (microsecond / 1000).toFixed(6); // Six sig figs
 }
 
 
