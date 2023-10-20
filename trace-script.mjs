@@ -37,13 +37,15 @@ const csvHeaders = [
   'librariesRequested',
   'librariesLoaded',
   'totalLibraryLoadTime',
-  'firstCommitEnd',
-  'lastCommitEnd',
+  'firstPrePaint',
+  'lastPrePaint',
   'totalPaintTime',
   'totalAppLoadTime',
-  'firstContentfulPaint',
-  'largestContentfulPaint',
-  'totalBlockingTime'
+  'puppeteerFCP',
+  'puppeteerLCP',
+  'lighthouseFCP',
+  'lighthouseLCP',
+  'lighthouseTBT'
 ]
 
 /*
@@ -158,6 +160,10 @@ const testPage = async (library,test,csvStream,options) => {
       traceEntry.push(test);
       traceEntry.push(i);
 
+      // Initial page request event
+      const navigationStart = trace.traceEvents.filter(e=>(e.name === "navigationStart"))[0];
+
+
       // Get libraries requested and received
       const packages = libraries[library];
       const packageRequestTimes = [];
@@ -170,11 +176,11 @@ const testPage = async (library,test,csvStream,options) => {
         packageLoadedTimes.push(packageLoaded[0].ts);
       })
 
-      // Timestamps of when the first package is requested and when the final package is loaded -- in microseconds
+      // Timestamps of when the first package is requested and when the final package is loaded -- in milliseconds from navigation start
       const firstPackageRequest = Math.min(...packageRequestTimes);
-      traceEntry.push(firstPackageRequest);
+      traceEntry.push(toMs(firstPackageRequest - navigationStart.ts));
       const finalPackageLoad = Math.max(...packageLoadedTimes);
-      traceEntry.push(finalPackageLoad);
+      traceEntry.push(toMs(finalPackageLoad - navigationStart.ts));
 
       // Total library load time -- in milliseconds
       const totalLibraryLoadTime = finalPackageLoad - firstPackageRequest;
@@ -191,9 +197,9 @@ const testPage = async (library,test,csvStream,options) => {
         if (commit.ts > finalCommitEnd.ts) finalCommitEnd = commit;
       }
     
-      // Timestamps of first and last commit end -- in microseconds
-      traceEntry.push(firstCommitEnd.ts)
-      traceEntry.push(finalCommitEnd.ts+finalCommitEnd.dur);
+      // Timestamps of first and last commit end -- in milliseconds from navigation start
+      traceEntry.push(toMs(firstCommitEnd.ts - navigationStart.ts))
+      traceEntry.push(toMs(finalCommitEnd.ts+finalCommitEnd.dur - navigationStart.ts));
 
       // Total paint time -- in milliseconds
       const totalPaintTime = finalCommitEnd.ts - firstCommitEnd.ts;
@@ -202,6 +208,26 @@ const testPage = async (library,test,csvStream,options) => {
       // Total load time from first request sent to final commit rendered -- in milliseconds
       const totalAppLoadTime = finalCommitEnd.ts - firstPackageRequest;
       traceEntry.push(toMs(totalAppLoadTime));
+
+      // Puppeteer FCP and LCP
+      const fcpTraces = trace.traceEvents.filter(e=>(e.name === "firstContentfulPaint"));
+
+      let puppeteerFCP;
+      if (fcpTraces.length == 0) {
+        puppeteerFCP = 'NaN';
+      }
+      else puppeteerFCP = fcpTraces[0].ts - navigationStart.ts;
+
+      const lcpTraces = trace.traceEvents.filter(e=>(e.name==="largestContentfulPaint::Candidate"));
+      let puppeteerLCP;
+      if (lcpTraces.length == 0) puppeteerLCP = puppeteerFCP;
+      else puppeteerLCP = lcpTraces[0].ts - navigationStart.ts;
+
+      // In milliseconds from page load
+      traceEntry.push(toMs(puppeteerFCP));
+      traceEntry.push(toMs(puppeteerLCP));
+
+      // Lighthouse results
 
       // First contentful paint -- in milliseconds
       const firstPaint = lighthoueResults.lhr.audits['first-contentful-paint'];
@@ -254,7 +280,7 @@ const testPage = async (library,test,csvStream,options) => {
     for (let j=0;j<csvEntries.length;j++) {
       sum += parseInt(csvEntries[j][i]);
     }
-    const avg = (sum / csvEntries.length);
+    const avg = (sum / parseFloat(csvEntries.length));
     avgEntry.push(avg);
   }
   csvEntries.push(avgEntry);
@@ -269,7 +295,6 @@ const testPage = async (library,test,csvStream,options) => {
 const toMs = (microsecond) => {
     return (microsecond / 1000).toFixed(6); // Six sig figs
 }
-
 
 if (process.argv.length < 4) {
   console.error('Trace script requires a minimum of two arguments: library(s) to test and type of test.');

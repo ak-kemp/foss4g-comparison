@@ -34,6 +34,7 @@
       const basemap = L.esri.Vector.vectorBasemapLayer('ArcGIS:LightGray', {
         apiKey
       }).addTo(map);
+      await new Promise((res,rej)=>setTimeout(res,5000));
     </script>
   </body>
 </html>

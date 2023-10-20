@@ -33,6 +33,7 @@
           url: `https://ibasemaps-api.arcgis.com/arcgis/rest/services/World_Imagery/MapServer?token=${apiKey}`
         })
       tileLayer.addTo(map);
+      await new Promise((res,rej)=>setTimeout(res,5000));
     </script>
   </body>
 </html>

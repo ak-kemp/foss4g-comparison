@@ -48,6 +48,7 @@
         zoom: location.zoom-1, // starting zoom
         center: [location.lng,location.lat] // starting location [longitude, latitude]
       });
+      await new Promise((res,rej)=>setTimeout(res,5000));
     </script>
   </body>
 </html>

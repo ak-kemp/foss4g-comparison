@@ -41,7 +41,7 @@
       });
 
       map.addLayer(geoJSONLayer);
- 
+      await new Promise((res,rej)=>setTimeout(res,5000));
     </script>
   </body>
 </html>
