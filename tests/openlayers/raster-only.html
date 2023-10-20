@@ -1,0 +1,47 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <style>
+      html,
+      body,
+      #map {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 14px;
+        color: #323232;
+      }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/ol@v7.4.0/dist/ol.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v7.4.0/ol.css">
+  </head>
+  <body>
+    <div id="map"></div>
+    <script type="module">
+      import {rasterOnly as location} from '../locations.js';
+      const map = new ol.Map({ target: "map" });
+
+      map.setView(
+        new ol.View({
+          center: ol.proj.fromLonLat([location.lng,location.lat]), // Starting location [longitude, latitude]
+          zoom: location.zoom+1
+        })
+      );
+
+      const parcelsURL = "https://services3.arcgis.com/GVgbJbqm8hXASVYi/arcgis/rest/services/Santa_Monica_Mountains_Parcels/MapServer/tile/{z}/{y}/{x}";
+
+      const parclesSource = new ol.source.XYZ({
+        url: parcelsURL
+      });
+
+      const tileLayer = new ol.layer.Tile({
+        source: parclesSource,
+      });
+
+      map.addLayer(tileLayer);
+    </script>
+  </body>
+</html>
