@@ -74,7 +74,7 @@ const performTest = async (library, test, options) => {
 
   const iterations = options.iterations ? parseInt(options.iterations) : 5;
   const saveScreenshots = (options.saveScreenshots === 'true') ? true : false;
-  const saveFiles = (options.saveFiles === 'false') ? true : true;
+  const saveFiles = (options.saveFiles === 'false') ? false : true;
 
   // Initialize output folder and data.csv
   const typeFolder = `${OUTPUT_FOLDER+library}/${test}/`;
@@ -133,7 +133,7 @@ const testPage = async (library,test,csvStream,options) => {
       // Generate puppeteer trace
       console.log(`Starting trace ${i}...`);
       await page.tracing.start({ screenshots: true, path: `${testName}-trace-${i}.json` });
-      await page.goto(appAddress, { waitUntil:'networkidle0',timeout: 30000 });
+      await page.goto(appAddress, { waitUntil:'networkidle0',timeout: 60000 });
       await new Promise((res,rej)=>setTimeout(res,5000)); // Extra time for commits to render
       await page.tracing.stop();
       await page.close();
