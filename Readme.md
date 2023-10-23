@@ -55,7 +55,7 @@ How do different open source mapping libraries compare with one another based on
 2. Sign up for a free [ArcGIS Developer account](https://developers.arcgis.com/sign-up/).
 3. In the developer dashboard, copy the default API key.
 4. In the code, go to **Tests** > **auth.js** and set your API key so that you can access the basemap styles. 
-5. In the command line, specify the [library, test, other options](https://github.com/ak-kemp/foss4g-comparison/blob/main/trace-script.mjs#L51). 
+5. In the command line, specify the [library, test, and other options](https://github.com/ak-kemp/foss4g-comparison/blob/main/trace-script.mjs#L51). 
 
 ### Resources 
 
